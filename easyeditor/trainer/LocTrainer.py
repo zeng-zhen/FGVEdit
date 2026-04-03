@@ -43,7 +43,7 @@ class LocTrainer(BaseTrainer):
         self.model.train(training)
         self.original_model.train(training)
 
-        with torch.no_grad(): # 要保证loc和loc_image不变
+        with torch.no_grad():
             base_outputs = self.model(batch["loc"])
             if not isinstance(base_outputs, torch.Tensor):
                 base_logits = base_outputs.logits

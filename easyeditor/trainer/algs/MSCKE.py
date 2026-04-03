@@ -14,37 +14,24 @@ LOG = logging.getLogger(__name__)
 class CrossAttention(nn.Module):
     def __init__(self, text_dim, image_dim, output_dim):
         super(CrossAttention, self).__init__()
-        self.text_projection = nn.Linear(text_dim, output_dim)  # 将文本特征映射到输出维度
-        self.image_projection = nn.Linear(image_dim, output_dim)  # 将图像特征映射到输出维度
-        self.output_projection = nn.Linear(output_dim * 2, output_dim)  # 将融合特征映射到输出维度
+        self.text_projection = nn.Linear(text_dim, output_dim)
+        self.image_projection = nn.Linear(image_dim, output_dim)
+        self.output_projection = nn.Linear(output_dim * 2, output_dim)
 
     def forward(self, text_features, image_features):
-        # 线性变换
-        text_proj = self.text_projection(text_features)  # 文本特征变换
-        image_proj = self.image_projection(image_features)  # 图像特征变换
-        # 计算注意力得分
-        attention_scores = torch.matmul(text_proj, image_proj.transpose(-1, -2))  # 计算注意力得分
-        # 使用Softmax进行归一化
+        text_proj = self.text_projection(text_features)
+        image_proj = self.image_projection(image_features)
+        attention_scores = torch.matmul(text_proj, image_proj.transpose(-1, -2))
         attention_weights = F.softmax(attention_scores, dim=-1)
-        # 计算加权平均
-        image_context = torch.matmul(attention_weights, image_proj)  # 从图像特征中获得上下文
-        # 将文本特征和图像上下文特征拼接
+        image_context = torch.matmul(attention_weights, image_proj)
         combined_features = torch.cat((text_proj, image_context), dim=-1)
-        # 最终映射
         fused_output = self.output_projection(combined_features)
         return fused_output
     
 def attention_fusion(text_features,image_features):
-    # 计算图像特征和文本特征之间的相似性（点积注意力）
     attention_scores = torch.matmul(text_features, image_features.transpose(-1, -2))
-
-    # 归一化注意力得分（使用Softmax函数）
     attention_weights = F.softmax(attention_scores, dim=-1)
-
-    # 对图像特征进行加权平均
     fused_features = torch.matmul(attention_weights, image_features)
-
-    # 可以选择将图像特征和加权文本特征拼接或相加
     combined_features = torch.cat((text_features, fused_features), dim=-1)
     return combined_features
 
@@ -255,7 +242,6 @@ class MSCKE(EditableModel):
 
 
     # def multi_embedding_logsim_matrix(self, ctx_text, input_text, ctx_images=None, input_images=None):
-    #     # 将缓存的上下文文本（cls_ctxs）和测试文本（test_input_text）转为嵌入表示
     #     ctx_text_inputs = self.classifier_tok(text=ctx_text, return_tensors="pt", padding="max_length").to(self.config.device)
     #     ctx_images_inputs = torch.stack(ctx_images)
     #     if input_images is None:
@@ -312,7 +298,6 @@ class MSCKE(EditableModel):
     #     main_fused_embdes = main_fused_embdes.view(main_fused_embdes.shape[0], self.config.dist_heads, -1)
 
     def multi_embedding_logsim_matrix(self, ctx_text, input_text, ctx_images=None, input_images=None):
-        # 将缓存的上下文文本（cls_ctxs）和测试文本（test_input_text）转为嵌入表示
         ctx_text_inputs = self.classifier_tok(text=ctx_text, return_tensors="pt", padding=True).to(self.config.device)
         ctx_images_inputs = torch.stack(ctx_images)
         if input_images is None:
@@ -370,29 +355,22 @@ class MSCKE(EditableModel):
 
         
 
-        # 如果配置要求限制嵌入，则使用tanh函数
         if self.config.bound_embeds:
             ctx_fused_embdes = ctx_fused_embdes.tanh()
             main_fused_embdes = main_fused_embdes.tanh()
 
-        # 计算余弦相似度或欧几里得距离
         if self.config.cos:
-            # 使用余弦相似度进行计算
             cos = (ctx_fused_embdes[None] * main_fused_embdes[:, None]).sum(-1) / (ctx_fused_embdes[None].norm(2, -1) * main_fused_embdes[:, None].norm(2, -1))
             dists = 1 - cos
         else:
-            # 使用欧几里得距离
             dists = (ctx_fused_embdes[None] - main_fused_embdes[:, None]).norm(2, -1)
             if self.config.square:
                 dists = dists ** 2
 
-        # 取最小距离（减少维度头数）
         dists = dists.min(-1).values
 
-        # 确保所有距离非负
         assert dists.min() >= 0, "Shouldn't have negative distances!"
 
-        # 计算对数相似度
         cls_logsims = -dists * self.scale
 
         return cls_logsims
@@ -454,7 +432,6 @@ class MSCKE(EditableModel):
             
         test_images = inputs[0]["image_clip"]
 
-        #纯文本相似度
         # if self.config.cross_attend:
         #     log_sim_matrix = self.crossattend_logsim_matrix(cache_inputs, test_inputs)
         # else:

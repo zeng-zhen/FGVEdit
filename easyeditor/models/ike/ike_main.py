@@ -171,7 +171,7 @@ def apply_ike_to_per_model(request, loc_request, tokenizer, device):
         mask = [([True] * value.shape[-1])] * value.shape[0]
         for i in range(value.shape[0]):
             sep_idx = list(value[i]).index(tokenizer.convert_tokens_to_ids("</s>"))
-            for j in range(sep_idx): #连带</s>一块mask掉
+            for j in range(sep_idx):
                 mask[i][j] = False
         edit_toks[key + "_q_mask"] = mask 
         

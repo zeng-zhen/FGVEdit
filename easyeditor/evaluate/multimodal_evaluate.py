@@ -347,7 +347,7 @@ def prepare_multimodal_edit(hparams,
 
 def compute_multimodal_edit_quality(model, batch, exach_match=False):
     with torch.no_grad():
-        outputs = model(batch)  # MLLM输出在这里
+        outputs = model(batch)
         if isinstance(outputs, torch.Tensor):
             logits = outputs.detach().cpu()
             targ = batch["labels"].cpu()
