@@ -30,13 +30,13 @@ LOG = logging.getLogger(__name__)
 
 class BaseTrainer:
     def __init__(self, config, train_set: Dataset, val_set: Dataset):
+        self.config = config
+        self._setup_run_paths_and_logging()
         LOG.info(f'Config: {config}')
         model_ = get_model(config)
         self.alg_module = ALG_TRAIN_DICT[config.alg.upper()]
         LOG.info(f"Loading class {config.alg.upper()} from module {self.alg_module}")
         self.model = self.alg_module(model_, config, lambda: copy.deepcopy(model_))
-
-        self.config = config
 
         if config.train_base:
             self.original_model = self.model.model_constructor()
@@ -90,13 +90,36 @@ class BaseTrainer:
         # with open(os.getcwd() + "/config.json", "w") as f:
         #     json.dump(OmegaConf.to_container(config), f)
 
-        model_dir = os.path.join(config.results_dir, "models", config.alg)
-        if not (self.config.debug and not self.config.save) and not os.path.exists(model_dir):
-            os.makedirs(model_dir)
-        safe_model_name = self.config.model_name.split("/")[-1]  # Make sure no slashes
-        self.save_path = f"{model_dir}/{safe_model_name}"
-
         self.start_time = formatted_timestamp()
+
+    def _setup_run_paths_and_logging(self):
+        model_dir = os.path.join(self.config.results_dir, "models", self.config.alg)
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
+
+        safe_model_name = self.config.model_name.split("/")[-1]
+        self.run_id = time.strftime("%y%m%d_%H%M%S")
+        self.save_path = f"{model_dir}/{safe_model_name}_{self.run_id}"
+        self.log_path = f"{self.save_path}.log"
+
+        package_logger = logging.getLogger("easyeditor")
+        package_logger.setLevel(logging.INFO)
+
+        for handler in list(package_logger.handlers):
+            if getattr(handler, "_easyeditor_training_log", False):
+                package_logger.removeHandler(handler)
+                handler.close()
+
+        file_handler = logging.FileHandler(self.log_path)
+        file_handler.setLevel(logging.INFO)
+        file_handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
+        file_handler._easyeditor_training_log = True
+        package_logger.addHandler(file_handler)
+        self.log_handler = file_handler
+
+        LOG.info(f"Writing training logs to {self.log_path}")
 
     def save_state(self, stats):
         if (self.config.debug and not self.config.save) or self.config.eval_only:
@@ -134,10 +157,6 @@ class BaseTrainer:
             )
 
     def run(self):
-        from datetime import datetime
-        cur_time = datetime.now().strftime("%y%m%d_%H%M%S")
-        self.save_path = self.save_path + '_' + cur_time
-
         averager = RunningStatAverager("train")
         stopper = EarlyStopper(
             self.config.early_stop_patience, self.config.early_stop_key
@@ -170,8 +189,9 @@ class BaseTrainer:
                 if self.global_iter % self.config.val_interval == 0:
                     val_info = self.validate(steps=self.config.val_steps)
                     self.echo(self.global_iter, val_info)
-                    if stopper.update(self.global_iter, val_info):
-                        self.save_state(val_info)  # New best
+                    is_new_best = stopper.update(self.global_iter, val_info)
+                    self.save_state(val_info)
+                    if is_new_best:
                         best_step = self.global_iter
                     if stopper.should_stop():
                         LOG.info(
@@ -201,9 +221,9 @@ class BaseTrainer:
 
         if self.config.results_dir is not None:
             model_dir = os.path.join(self.config.results_dir, "models", self.config.alg)
-            results_path = f"{model_dir}/{cur_time}_{self.config.model_name}_results.json"
+            results_path = f"{model_dir}/{self.run_id}_{self.config.model_name}_results.json"
         else:
-            results_path = f"{os.getcwd()}/{cur_time}_{self.config.model_name}_results.json"
+            results_path = f"{os.getcwd()}/{self.run_id}_{self.config.model_name}_results.json"
 
         with open(results_path, "w") as f:
             json.dump(

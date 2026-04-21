@@ -9,7 +9,7 @@ tokenizer_class: LlamaTokenizer
 tokenizer_name: hugging_cache/Vicuna
 cls_class: CLIPModel
 cls_processor_class: CLIPProcessor
-cls_name: hugging_cache/clip-vit-large-patch14
+cls_name: hugging_cache/clip-vit-base-patch32
 emb_type: get_features
 fusion_type: dot
 inner_params:
@@ -59,7 +59,7 @@ silent: False
 #max_epochs: 1
 max_iters: 20000
 log_interval: 200
-val_interval: 2000
+val_interval: 1000
 early_stop_patience: 30000
 early_stop_key: "loss/total_edit_val"
 eval_only: False
@@ -71,7 +71,7 @@ unlikelihood: True
 
 val_batch_size: 1
 accumulate_bs: 1
-val_steps: 1000
+val_steps: 3000
 opt: Adam
 grad_clip: 100.
 

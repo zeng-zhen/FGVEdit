@@ -1,5 +1,5 @@
 # Model
-device: 4
+device: 7
 
 name: hugging_cache/opt-2.7b
 model_name: blip2
@@ -9,7 +9,7 @@ tokenizer_class: GPT2Tokenizer
 tokenizer_name: hugging_cache/opt-2.7b
 cls_class: CLIPModel
 cls_processor_class: CLIPProcessor
-cls_name: hugging_cache/clip-vit-large-patch14
+cls_name: hugging_cache/clip-vit-base-patch32
 emb_type: get_features
 fusion_type: dot
 inner_params:
@@ -57,9 +57,9 @@ model_save_pt: 2000
 edit_bs: 1
 silent: False
 #max_epochs: 1
-max_iters: 50000
+max_iters: 20000
 log_interval: 200
-val_interval: 2000
+val_interval: 1000
 early_stop_patience: 10000
 early_stop_key: "loss/total_edit_val"
 eval_only: False
@@ -72,7 +72,7 @@ unlikelihood: True
 
 val_batch_size: 1
 accumulate_bs: 1
-val_steps: 1000
+val_steps: 3000
 opt: Adam
 grad_clip: 100.
 
