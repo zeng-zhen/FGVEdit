@@ -65,20 +65,20 @@ class FGVEditDataset(BaseDataset):
                 {
                     "prompt": record["src"],
                     "target": record["alt"],
-                    "rephrase_prompt": record["rephrase"],
+                    "rephrase_prompt": record["Generality Question"],
                     "image": image,
                     "image_path": image_path,
                     "image_rephrase": image,
                     "image_rephrase_path": image_path,
                     "cond": f" >> {record['alt']} || {record['src']}",
-                    "fg_gen_q": record["fg_gen_q"],
-                    "fg_gen_a": record["fg_gen_a"],
-                    "locality_prompt": record["loc"],
-                    "locality_ground_truth": record["loc_ans"],
+                    "fg_gen_q": record["In-Visual-Scope Question"],
+                    "fg_gen_a": record["In-Visual-Scope Answer"],
+                    "locality_prompt": record["Locality Question"],
+                    "locality_ground_truth": record["Locality Answer"],
                     "fg_loc_image": image,
                     "fg_loc_image_path": image_path,
-                    "fg_loc_q": record["fg_loc_q"],
-                    "fg_loc_a": record["fg_loc_a"],
+                    "fg_loc_q": record["Out-of-Visual-Scope Question"],
+                    "fg_loc_a": record["Out-of-Visual-Scope Answer"],
                 }
             )
 
