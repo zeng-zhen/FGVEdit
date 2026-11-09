@@ -107,7 +107,7 @@ The current `hparams/` files reference pre-trained model caches and checkpoints 
 hugging_cache/
 ├── all-MiniLM-L6-v2/
 ├── bert-base-uncased/
-├── clip-vit-large-patch14/
+├── clip-vit-base-patch32/
 ├── distilbert-base-cased/
 ├── opt-2.7b/
 ├── opt-125m/
@@ -138,10 +138,16 @@ Links are in the following:
     </tr>
     <tr>
         <td><a href="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/eva_vit_g.pth">eva_vit_g.pth</a></td>
-        <td><a href="https://huggingface.co/openai/clip-vit-large-patch14">clip-vit-large-patch14</a></td>
+        <td><a href="https://huggingface.co/openai/clip-vit-base-patch32">clip-vit-base-patch32</a></td>
         <td></td>
     </tr>
 </table>
+
+Download the CLIP ViT-B/32 model and processor used by MSCKE into the configured local directory:
+
+```bash
+huggingface-cli download openai/clip-vit-base-patch32 --local-dir ./hugging_cache/clip-vit-base-patch32
+```
 
 
 
@@ -275,6 +281,8 @@ Important:
 
 - `--mode eval` requires a trained checkpoint.
 - Before evaluation, update the `archive` field in the chosen evaluation YAML to the actual checkpoint file path produced during training.
+- MSCKE uses CLIP ViT-B/32 (`openai/clip-vit-base-patch32`) as its multimodal scope classifier, as described in [Section 5.1 of the paper](https://openaccess.thecvf.com/content/ICCV2025/papers/Zeng_Visual-Oriented_Fine-Grained_Knowledge_Editing_for_MultiModal_Large_Language_Models_ICCV_2025_paper.pdf#page=6). The supplied training and evaluation configs for both BLIP-2 and MiniGPT-4 use this architecture.
+- The evaluation `cls_name` must match the CLIP architecture used to train the checkpoint selected by `archive`. If you trained with another architecture (for example, ViT-L/14), use that same architecture for evaluation. Changing `cls_name` does not convert an existing checkpoint between architectures.
 
 ### Practical Notes
 

@@ -9,7 +9,7 @@ tokenizer_class: GPT2Tokenizer
 tokenizer_name: hugging_cache/opt-2.7b
 cls_class: CLIPModel
 cls_processor_class: CLIPProcessor
-cls_name: hugging_cache/clip-vit-large-patch14
+cls_name: hugging_cache/clip-vit-base-patch32
 emb_type: get_features
 fusion_type: dot
 inner_params:
